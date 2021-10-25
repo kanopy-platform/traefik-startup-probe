@@ -24,15 +24,7 @@ type HTTPClient interface {
 	Do(req *http.Request) (*http.Response, error)
 }
 
-var (
-	Client HTTPClient
-)
-
-func init() {
-	Client = &http.Client{}
-}
-
-func countFrontends() (int, error) {
+func countFrontends(client HTTPClient) (int, error) {
 
 	var providers Providers
 
@@ -41,7 +33,7 @@ func countFrontends() (int, error) {
 		return 0, err
 	}
 
-	resp, err := Client.Do(req)
+	resp, err := client.Do(req)
 	if err != nil {
 		return 0, err
 	}
@@ -78,9 +70,11 @@ func main() {
 
 	log.Info("startup probe server started")
 
+	client := &http.Client{}
+
 	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		if !serverInitialized {
-			if curFrontends, err = countFrontends(); err != nil {
+			if curFrontends, err = countFrontends(client); err != nil {
 				log.Error(err)
 			}
 			log.Debug(fmt.Sprintf("frontends: %v (previous: %v)", curFrontends, prevFrontends))

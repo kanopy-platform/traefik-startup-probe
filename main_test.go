@@ -32,7 +32,7 @@ func TestCountFrontends(t *testing.T) {
 	`
 
 	resp := ioutil.NopCloser(bytes.NewReader([]byte(json)))
-	Client = &MockClient{
+	client := &MockClient{
 		MockDo: func(*http.Request) (*http.Response, error) {
 			return &http.Response{
 				StatusCode: 200,
@@ -41,10 +41,10 @@ func TestCountFrontends(t *testing.T) {
 		},
 	}
 
-	result, err := countFrontends()
+	result, err := countFrontends(client)
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	assert.Equal(t, result, 2)
+	assert.Equal(t, 2, result)
 }
