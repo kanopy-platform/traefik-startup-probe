@@ -1,10 +1,11 @@
 FROM golang:1.17 as build
 WORKDIR /go/src/app
-COPY . .
+COPY go.mod go.sum ./
 RUN go get -d -v ./...
+COPY . .
 RUN go build -o /go/bin/app
 
-FROM debian:buster-slim
+FROM debian:bookwork-slim
 RUN apt-get update && apt-get install --yes ca-certificates
 RUN groupadd -r app && useradd --no-log-init -r -g app app
 USER app
