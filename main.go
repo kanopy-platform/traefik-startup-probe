@@ -18,9 +18,7 @@ type Kubernetes struct {
 	Frontends Frontends              `json:"frontends"`
 }
 
-type Frontends map[string]Frontend
-
-type Frontend map[string]interface{}
+type Frontends map[string]interface{}
 
 type HTTPClient interface {
 	Do(req *http.Request) (*http.Response, error)
