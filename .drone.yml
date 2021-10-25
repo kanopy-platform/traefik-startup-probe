@@ -14,6 +14,15 @@ volumes:
     temp: {}
 
 steps:
+  - name: test
+    image: golangci/golangci-lint:v1.42.0-alpine
+    volumes:
+      - name: cache
+        path: /go
+    commands:
+      - apk add make
+      - make test
+
   - name: build
     image: plugins/kaniko-ecr
     volumes:

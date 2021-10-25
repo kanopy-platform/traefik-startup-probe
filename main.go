@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 
@@ -23,30 +22,36 @@ type Frontends map[string]Frontend
 
 type Frontend map[string]interface{}
 
+type HTTPClient interface {
+	Do(req *http.Request) (*http.Response, error)
+}
+
+var (
+	Client HTTPClient
+)
+
+func init() {
+	Client = &http.Client{}
+}
+
 func countFrontends() (int, error) {
 
 	var providers Providers
 
-	client := http.Client{}
-
-	req, err := http.NewRequest("GET", "http://localhost:8080/api/providers", nil)
+	req, err := http.NewRequest(http.MethodGet, "http://localhost:8080/api/providers", nil)
 	if err != nil {
 		return 0, err
 	}
 
-	resp, err := client.Do(req)
+	resp, err := Client.Do(req)
 	if err != nil {
 		return 0, err
 	}
 
 	defer resp.Body.Close()
 
-	bodyBytes, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return 0, err
-	}
+	err = json.NewDecoder(resp.Body).Decode(&providers)
 
-	json.Unmarshal(bodyBytes, &providers)
 	if err != nil {
 		return 0, err
 	}
@@ -73,7 +78,7 @@ func main() {
 	}
 	log.SetLevel(logLevel)
 
-	log.Info(fmt.Sprintf("startup probe server started"))
+	log.Info("startup probe server started")
 
 	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		if !serverInitialized {
@@ -92,7 +97,10 @@ func main() {
 		log.Debug(fmt.Sprintf("serverInitialized: %v", serverInitialized))
 
 		w.WriteHeader(code)
-		w.Write([]byte(http.StatusText(code)))
+		_, err = w.Write([]byte(http.StatusText(code)))
+		if err != nil {
+			log.Error(err)
+		}
 
 		log.Info(fmt.Sprintf("%v %v %v", r.URL, code, r.UserAgent()))
 
