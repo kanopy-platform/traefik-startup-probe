@@ -3,9 +3,6 @@ kind: pipeline
 type: kubernetes
 name: default
 
-trigger:
-  branch: [main]
-
 workspace:
   path: /go/src/github.com/${DRONE_REPO}
 
@@ -52,6 +49,7 @@ steps:
       secret_key:
         from_secret: ecr_secret_key
     when:
+      branch: [main]
       event: [push]
 
   - name: publish-tag
