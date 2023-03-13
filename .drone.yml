@@ -12,12 +12,11 @@ volumes:
 
 steps:
   - name: test
-    image: golangci/golangci-lint:v1.42.0-alpine
+    image: golangci/golangci-lint:v1.51.0
     volumes:
       - name: cache
         path: /go
     commands:
-      - apk add make
       - make test
 
   - name: build
