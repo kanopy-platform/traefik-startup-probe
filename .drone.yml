@@ -78,6 +78,11 @@ platform:
 depends_on:
   - test
 
+trigger:
+  branch: [main]
+  event: [push, tag]
+
+
 steps:
   - name: publish
     image: plugins/kaniko-ecr
