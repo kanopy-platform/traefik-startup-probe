@@ -2,7 +2,7 @@ package main
 
 import (
 	"bytes"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"testing"
 
@@ -30,8 +30,7 @@ func TestCountFrontends(t *testing.T) {
 			}
 		}
 	`
-
-	resp := ioutil.NopCloser(bytes.NewReader([]byte(json)))
+	resp := io.NopCloser(bytes.NewReader([]byte(json)))
 	client := &MockClient{
 		MockDo: func(*http.Request) (*http.Response, error) {
 			return &http.Response{
