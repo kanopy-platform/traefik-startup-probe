@@ -28,6 +28,17 @@ steps:
       - licensed cache
       - licensed status
 
+  - name: build
+    image: plugins/kaniko-ecr
+    volumes:
+      - name: cache
+        path: /go
+    pull: always
+    settings:
+      no_push: true
+    when:
+      event: [pull_request]
+
 # publish on push
 ---
 kind: pipeline
@@ -38,7 +49,7 @@ depends_on:
   - test
 trigger:
   branch: [main]
-  event: [push, pull_request]
+  event: [push]
 steps:
   - name: publish
     image: plugins/kaniko-ecr
@@ -63,7 +74,7 @@ depends_on:
   - test
 trigger:
   branch: [main]
-  event: [push, pull_request]
+  event: [push]
 steps:
   - name: publish
     image: plugins/kaniko-ecr
@@ -88,7 +99,7 @@ depends_on:
   - publish-arm64
 trigger:
   branch: [main]
-  event: [push, pull_request]
+  event: [push]
 steps:
   - image: public.ecr.aws/kanopy/buildah-plugin:v0.1.0-arm64
     name: manifest
