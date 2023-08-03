@@ -1,6 +1,6 @@
+# test pipeline
 ---
 kind: pipeline
-type: kubernetes
 name: test
 
 trigger:
@@ -23,7 +23,7 @@ steps:
       - make test
 
   - name: license-check
-    image: public.ecr.aws/kanopy/licensed-go:4.0.4-0.1.0 
+    image: public.ecr.aws/kanopy/licensed-go:4.0.4-0.1.0
     commands:
       - licensed cache
       - licensed status
@@ -39,30 +39,27 @@ steps:
     when:
       event: [pull_request]
 
+# publish on push
 ---
 kind: pipeline
-type: kubernetes
 name: publish-amd64
 platform:
   arch: amd64
-
 depends_on:
   - test
-
 trigger:
   branch: [main]
-  event: [push, tag]
-
+  event: [push]
 steps:
   - name: publish
     image: plugins/kaniko-ecr
     pull: always
     settings:
-      registry: public.ecr.aws/kanopy
-      repo: ${DRONE_REPO_NAME}
+      registry: public.ecr.aws
+      repo: kanopy/${DRONE_REPO_NAME}
       create_repository: true
-      auto_tag: true
-      auto_tag_suffix: amd64
+      tags:
+        - git-${DRONE_COMMIT_SHA:0:7}-amd64
       access_key:
         from_secret: ecr_access_key
       secret_key:
@@ -70,28 +67,130 @@ steps:
 
 ---
 kind: pipeline
-type: kubernetes
 name: publish-arm64
 platform:
   arch: arm64
-
 depends_on:
   - test
-
 trigger:
   branch: [main]
-  event: [push, tag]
-
-
+  event: [push]
 steps:
   - name: publish
     image: plugins/kaniko-ecr
     pull: always
     settings:
-      registry: public.ecr.aws/kanopy
-      repo: ${DRONE_REPO_NAME}
-      auto_tag: true
-      auto_tag_suffix: arm64
+      registry: public.ecr.aws
+      repo: kanopy/${DRONE_REPO_NAME}
+      tags:
+        - git-${DRONE_COMMIT_SHA:0:7}-arm64
+      access_key:
+        from_secret: ecr_access_key
+      secret_key:
+        from_secret: ecr_secret_key
+
+---
+kind: pipeline
+name: publish-manifest
+platform:
+  arch: arm64
+depends_on:
+  - publish-amd64
+  - publish-arm64
+trigger:
+  branch: [main]
+  event: [push]
+steps:
+  - image: public.ecr.aws/kanopy/buildah-plugin:v0.1.0-arm64
+    name: manifest
+    settings:
+      manifest:
+        sources:
+          - git-${DRONE_COMMIT_SHA:0:7}-amd64
+          - git-${DRONE_COMMIT_SHA:0:7}-arm64
+        targets:
+          - git-${DRONE_COMMIT_SHA:0:7}
+      registry: public.ecr.aws
+      repo: kanopy/${DRONE_REPO_NAME}
+      access_key:
+        from_secret: ecr_access_key
+      secret_key:
+        from_secret: ecr_secret_key
+
+# publish on tag
+---
+kind: pipeline
+name: publish-amd64-tag
+platform:
+  arch: amd64
+depends_on:
+  - test
+trigger:
+  branch: [main]
+  event: [tag]
+steps:
+  - name: publish
+    image: plugins/kaniko-ecr
+    pull: always
+    settings:
+      registry: public.ecr.aws
+      repo: kanopy/${DRONE_REPO_NAME}
+      create_repository: true
+      tags:
+        - ${DRONE_TAG}-amd64
+      access_key:
+        from_secret: ecr_access_key
+      secret_key:
+        from_secret: ecr_secret_key
+
+---
+kind: pipeline
+name: publish-arm64-tag
+platform:
+  arch: arm64
+depends_on:
+  - test
+trigger:
+  branch: [main]
+  event: [tag]
+steps:
+  - name: publish
+    image: plugins/kaniko-ecr
+    pull: always
+    settings:
+      registry: public.ecr.aws
+      repo: kanopy/${DRONE_REPO_NAME}
+      tags:
+        - ${DRONE_TAG}-arm64
+      access_key:
+        from_secret: ecr_access_key
+      secret_key:
+        from_secret: ecr_secret_key
+
+---
+kind: pipeline
+name: publish-manifest-tag
+platform:
+  arch: arm64
+depends_on:
+  - publish-amd64-tag
+  - publish-arm64-tag
+trigger:
+  branch: [main]
+  event: [tag]
+steps:
+  - image: public.ecr.aws/kanopy/buildah-plugin:v0.1.0-arm64
+    name: manifest
+    settings:
+      manifest:
+        sources:
+          - ${DRONE_TAG}-amd64
+          - ${DRONE_TAG}-arm64
+        targets:
+          - latest
+          - ${DRONE_TAG}
+      registry: public.ecr.aws
+      repo: kanopy/${DRONE_REPO_NAME}
       access_key:
         from_secret: ecr_access_key
       secret_key:
