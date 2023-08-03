@@ -3,9 +3,6 @@
 kind: pipeline
 name: test
 
-trigger:
-  branch: [main]
-
 workspace:
   path: /go/src/github.com/${DRONE_REPO}
 
@@ -48,7 +45,6 @@ platform:
 depends_on:
   - test
 trigger:
-  branch: [main]
   event: [push]
 steps:
   - name: publish
@@ -73,7 +69,6 @@ platform:
 depends_on:
   - test
 trigger:
-  branch: [main]
   event: [push]
 steps:
   - name: publish
@@ -98,7 +93,6 @@ depends_on:
   - publish-amd64
   - publish-arm64
 trigger:
-  branch: [main]
   event: [push]
 steps:
   - image: public.ecr.aws/kanopy/buildah-plugin:v0.1.0-arm64
