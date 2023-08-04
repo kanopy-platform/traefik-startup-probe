@@ -55,8 +55,8 @@ steps:
     image: plugins/kaniko-ecr
     pull: always
     settings:
-      registry: public.ecr.aws
-      repo: kanopy/${DRONE_REPO_NAME}
+      registry: public.ecr.aws/kanopy
+      repo: ${DRONE_REPO_NAME}
       create_repository: true
       tags:
         - git-${DRONE_COMMIT_SHA:0:7}-amd64
@@ -80,8 +80,8 @@ steps:
     image: plugins/kaniko-ecr
     pull: always
     settings:
-      registry: public.ecr.aws
-      repo: kanopy/${DRONE_REPO_NAME}
+      registry: public.ecr.aws/kanopy
+      repo: ${DRONE_REPO_NAME}
       tags:
         - git-${DRONE_COMMIT_SHA:0:7}-arm64
       access_key:
@@ -133,8 +133,8 @@ steps:
     image: plugins/kaniko-ecr
     pull: always
     settings:
-      registry: public.ecr.aws
-      repo: kanopy/${DRONE_REPO_NAME}
+      registry: public.ecr.aws/kanopy
+      repo: ${DRONE_REPO_NAME}
       create_repository: true
       tags:
         - ${DRONE_TAG}-amd64
@@ -158,8 +158,8 @@ steps:
     image: plugins/kaniko-ecr
     pull: always
     settings:
-      registry: public.ecr.aws
-      repo: kanopy/${DRONE_REPO_NAME}
+      registry: public.ecr.aws/kanopy
+      repo: ${DRONE_REPO_NAME}
       tags:
         - ${DRONE_TAG}-arm64
       access_key:
